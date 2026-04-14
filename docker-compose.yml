@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  celestial-3d-explorer:
+    build: .
+    container_name: celestial-3d-explorer
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/usr/share/nginx/html
+    restart: unless-stopped
