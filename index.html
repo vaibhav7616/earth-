@@ -16,12 +16,18 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <!-- Leaflet for Satellite View -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 </head>
 <body>
     <div id="loader">
         <div class="spinner"></div>
         <p>Initializing Universe...</p>
     </div>
+
+    <!-- Map Overlay for Zoom-in -->
+    <div id="map-overlay"></div>
 
     <div id="ui-container">
         <div class="header">
@@ -32,35 +38,21 @@
         
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="label">Status</span>
-                <span class="value">Operational</span>
+                <span class="label">Orbiting</span>
+                <span class="value" id="orbiting-body">Sun</span>
             </div>
             <div class="stat-card">
-                <span class="label">Engine</span>
-                <span class="value">Three.js v128</span>
+                <span class="label">Zoom Level</span>
+                <span class="value" id="zoom-value">Outer Space</span>
             </div>
         </div>
 
         <div class="controls-hint">
             <div class="hint-item">
-                <span class="icon">🖱️</span>
-                <div class="text">
-                    <strong>Orbit</strong>
-                    <span>Left Click + Drag</span>
-                </div>
-            </div>
-            <div class="hint-item">
                 <span class="icon">🔍</span>
                 <div class="text">
-                    <strong>Zoom</strong>
-                    <span>Scroll Wheel</span>
-                </div>
-            </div>
-            <div class="hint-item">
-                <span class="icon">🖐️</span>
-                <div class="text">
-                    <strong>Pan</strong>
-                    <span>Right Click + Drag</span>
+                    <strong>Zoom to Earth</strong>
+                    <span>Scroll deep to see Street View</span>
                 </div>
             </div>
         </div>
