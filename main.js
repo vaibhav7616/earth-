@@ -8,43 +8,52 @@ const clock = new THREE.Clock();
 // --- CONFIGURATION ---
 const TEXTURE_BASE = "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/";
 const planetsData = [
-    { name: 'Mercury', size: 0.8, distance: 40, speed: 0.015, color: '#8c8c8c' },
-    { name: 'Venus', size: 1.5, distance: 70, speed: 0.012, color: '#e3bb76' },
-    { name: 'Earth', size: 5.0, distance: 130, speed: 0.008, isEarth: true }, // Larger Earth for better focus
-    { name: 'Mars', size: 1.2, distance: 180, speed: 0.007, color: '#cf6140' },
-    { name: 'Jupiter', size: 12, distance: 280, speed: 0.004, color: '#d39c7e' },
-    { name: 'Saturn', size: 10, distance: 380, speed: 0.003, hasRing: true, color: '#c5ab6e' },
-    { name: 'Uranus', size: 7, distance: 480, speed: 0.002, color: '#bbe1e4' },
-    { name: 'Neptune', size: 7, distance: 550, speed: 0.001, color: '#6081ff' }
+    { name: 'Mercury', size: 2, distance: 80, speed: 0.015, color: '#8c8c8c' },
+    { name: 'Venus', size: 4, distance: 130, speed: 0.012, color: '#e3bb76' },
+    { name: 'Earth', size: 5, distance: 200, speed: 0.01, isEarth: true },
+    { name: 'Mars', size: 3, distance: 280, speed: 0.008, color: '#cf6140' },
+    { name: 'Jupiter', size: 15, distance: 450, speed: 0.005, color: '#d39c7e' },
+    { name: 'Saturn', size: 13, distance: 650, speed: 0.004, hasRing: true, color: '#c5ab6e' },
+    { name: 'Uranus', size: 8, distance: 850, speed: 0.003, color: '#bbe1e4' },
+    { name: 'Neptune', size: 8, distance: 1000, speed: 0.002, color: '#6081ff' }
 ];
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+const renderer = new THREE.WebGLRenderer({ 
+    antialias: true, 
+    alpha: true, 
+    powerPreference: "high-performance" 
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
 renderer.shadowMap.enabled = true;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 20000);
-camera.position.set(0, 300, 800);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50000);
+camera.position.set(0, 500, 1200);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.minDistance = 2; // Allow very close zoom for Earth
-controls.maxDistance = 5000;
+controls.minDistance = 2; 
+controls.maxDistance = 10000;
 
 // --- POST PROCESSING ---
 const composer = new THREE.EffectComposer(renderer);
-const renderPass = new THREE.RenderPass(scene, camera);
-composer.addPass(renderPass);
+composer.addPass(new THREE.RenderPass(scene, camera));
 
-const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    2.0, // Intense Bloom for the Real Sun
+    0.5, 
+    0.85
+);
 composer.addPass(bloomPass);
 
 // --- LIGHTING ---
-scene.add(new THREE.AmbientLight(0x111111));
-const sunLight = new THREE.PointLight(0xffffff, 2.5, 5000, 1.2);
+scene.add(new THREE.AmbientLight(0x111111, 0.5));
+const sunLight = new THREE.PointLight(0xffffff, 3.5, 5000, 1);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
@@ -64,21 +73,24 @@ const sunFragmentShader = `
     varying vec3 vNormal;
     uniform float iTime;
     
-    // Simple noise fallback for animated surface
     float noise(vec2 p) {
         return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
     }
 
     void main() {
-        vec2 uv = vUv * 10.0;
-        float n = noise(uv + iTime * 0.1);
-        vec3 color = mix(vec3(1.0, 0.4, 0.0), vec3(1.0, 0.9, 0.2), n);
+        float n = noise(vUv * 8.0 + iTime * 0.05);
+        n += noise(vUv * 16.0 - iTime * 0.1) * 0.5;
         
-        // Add brightness at center
-        float intensity = pow(0.7 - dot(vNormal, vec3(0,0,1)), 2.0);
-        color += vec3(1.0, 0.8, 0.1) * intensity;
+        vec3 color1 = vec3(1.0, 0.3, 0.0); // Surface orange
+        vec3 color2 = vec3(1.0, 0.9, 0.1); // Flare yellow
         
-        gl_FragColor = vec4(color, 1.0);
+        vec3 finalColor = mix(color1, color2, n);
+        
+        // Edge darkening
+        float edge = dot(vNormal, vec3(0,0,1));
+        finalColor *= pow(edge, 0.5);
+        
+        gl_FragColor = vec4(finalColor, 1.0);
     }
 `;
 
@@ -88,61 +100,59 @@ const sunMaterial = new THREE.ShaderMaterial({
     fragmentShader: sunFragmentShader
 });
 
-const sun = new THREE.Mesh(new THREE.SphereGeometry(25, 64, 64), sunMaterial);
+const sun = new THREE.Mesh(new THREE.SphereGeometry(40, 64, 64), sunMaterial);
 scene.add(sun);
 
-// Sun Flare
+// Lens Flare
 const textureLoader = new THREE.TextureLoader();
 const flareTex = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/lensflare/lensflare0.png');
-const flareMat = new THREE.SpriteMaterial({ map: flareTex, color: 0xffaa00, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+const flareMat = new THREE.SpriteMaterial({ 
+    map: flareTex, 
+    color: 0xffcc00, 
+    transparent: true, 
+    opacity: 0.6, 
+    blending: THREE.AdditiveBlending 
+});
 const flare = new THREE.Sprite(flareMat);
-flare.scale.set(200, 200, 1);
+flare.scale.set(400, 400, 1);
 sun.add(flare);
 
 // --- STARS ---
 const starGeo = new THREE.BufferGeometry();
 const starPos = [];
-for(let i=0; i<15000; i++) {
-    const r = 5000 + Math.random() * 5000;
+for(let i=0; i<20000; i++) {
+    const r = 5000 + Math.random() * 10000;
     const theta = 2 * Math.PI * Math.random();
     const phi = Math.acos(2 * Math.random() - 1);
     starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
 }
 starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 })));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 2 })));
 
-// --- EARTH GOOGLE MAPS STYLE ---
-let earth;
+// --- EARTH ---
+let earthGroup;
 function createEarth() {
     const group = new THREE.Group();
-    
-    // High-Res Satellite Texture (ESRI Satellite)
-    const satelliteTexture = textureLoader.load('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/0/0/0'); // Base level
-    // Note: To truly "Google Map" it, we would need a tiled implementation. For generic web view, we use a high-res alternative.
-    // I will swap textures based on zoom level.
     
     const mat = new THREE.MeshStandardMaterial({
         map: textureLoader.load(TEXTURE_BASE + 'earth_atmos_2048.jpg'),
         bumpMap: textureLoader.load(TEXTURE_BASE + 'earth_bump_roughness_clouds_4096.jpg'),
-        bumpScale: 0.05,
+        bumpScale: 0.2,
         metalness: 0.1, roughness: 0.8
     });
     
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(5, 128, 128), mat);
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
     group.add(mesh);
     
     // Clouds
     const cloudMat = new THREE.MeshStandardMaterial({
         map: textureLoader.load(TEXTURE_BASE + 'earth_clouds_1024.png'),
-        transparent: true, opacity: 0.4, side: THREE.DoubleSide
+        transparent: true, opacity: 0.4
     });
     const clouds = new THREE.Mesh(new THREE.SphereGeometry(5.05, 128, 128), cloudMat);
     group.add(clouds);
     
     // Atmosphere
-    const atmoGeo = new THREE.SphereGeometry(5.2, 128, 128);
     const atmoMat = new THREE.ShaderMaterial({
         vertexShader: `
             varying vec3 vNormal;
@@ -154,17 +164,15 @@ function createEarth() {
         fragmentShader: `
             varying vec3 vNormal;
             void main() {
-                float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 2.5);
                 gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
             }
         `,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        transparent: true
+        side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true
     });
-    group.add(new THREE.Mesh(atmoGeo, atmoMat));
+    group.add(new THREE.Mesh(new THREE.SphereGeometry(5.2, 128, 128), atmoMat));
     
-    return { group, mesh, clouds };
+    return group;
 }
 
 const planets = [];
@@ -174,36 +182,55 @@ planetsData.forEach(d => {
     
     let obj;
     if (d.isEarth) {
-        earth = createEarth();
-        obj = earth.group;
+        earthGroup = createEarth();
+        obj = earthGroup;
     } else {
         const mat = new THREE.MeshStandardMaterial({ color: d.color, roughness: 0.8 });
         obj = new THREE.Mesh(new THREE.SphereGeometry(d.size, 64, 64), mat);
     }
-    
     obj.position.x = d.distance;
     orbit.add(obj);
     
-    // Orbit line
     const curve = new THREE.EllipseCurve(0, 0, d.distance, d.distance);
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(100)), new THREE.LineBasicMaterial({ color: 0x444444 }));
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(150)), new THREE.LineBasicMaterial({ color: 0x333333 }));
     line.rotation.x = Math.PI/2;
     scene.add(line);
     
-    planets.push({ orbit, obj, speed: d.speed, name: d.name });
+    planets.push({ orbit, obj, speed: d.speed, name: d.name, distance: d.distance });
 });
 
-// --- GOOGLE MAPS ZOOM TRANSITION ---
-// We detect zoom level. If very close to Earth, we reveal a "Satellite View" overlay or high-res texture.
-function updateEarthView() {
-    const dist = camera.position.distanceTo(earth.group.position);
-    // If we are close enough to Earth (e.g. distance < 15)
-    if (dist < 20) {
-        document.getElementById('map-overlay').style.opacity = '1';
-        document.getElementById('map-overlay').style.pointerEvents = 'auto';
+// --- GOOGLE MAPS TRANSITION ---
+let mapInitialized = false;
+let map;
+
+function initMap() {
+    if (mapInitialized) return;
+    map = L.map('map-overlay', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+    }).addTo(map);
+    mapInitialized = true;
+}
+
+function updateTransitions() {
+    // Check camera distance to Earth
+    // We need world position of Earth
+    const earthWorldPos = new THREE.Vector3();
+    earthGroup.getWorldPosition(earthWorldPos);
+    const dist = camera.position.distanceTo(earthWorldPos);
+    
+    const mapOverlay = document.getElementById('map-overlay');
+    const zoomValue = document.getElementById('zoom-value');
+    
+    if (dist < 40) {
+        initMap();
+        mapOverlay.style.opacity = '1';
+        mapOverlay.style.pointerEvents = 'auto';
+        zoomValue.innerText = "Street/House Level";
     } else {
-        document.getElementById('map-overlay').style.opacity = '0';
-        document.getElementById('map-overlay').style.pointerEvents = 'none';
+        mapOverlay.style.opacity = '0';
+        mapOverlay.style.pointerEvents = 'none';
+        zoomValue.innerText = dist > 1000 ? "Outer Space" : "Orbital View";
     }
 }
 
@@ -213,32 +240,30 @@ function animate() {
     const time = clock.getElapsedTime();
     
     sunMaterial.uniforms.iTime.value = time;
-    flare.scale.set(200 + Math.sin(time) * 10, 200 + Math.sin(time) * 10, 1);
+    flare.scale.set(400 + Math.sin(time) * 20, 400 + Math.sin(time) * 20, 1);
     
     planets.forEach(p => {
         p.orbit.rotation.y = time * p.speed;
         p.obj.rotation.y += 0.005;
-        if (p.name === 'Earth' && earth.clouds) earth.clouds.rotation.y += 0.001;
     });
     
-    updateEarthView();
+    updateTransitions();
     controls.update();
     composer.render();
 }
+
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('loader').style.display = 'none', 1000);
+    }, 2000);
+});
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Hide loader
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        document.getElementById('loader').style.opacity = '0';
-        setTimeout(() => document.getElementById('loader').style.display = 'none', 1000);
-    }, 2000);
 });
 
 animate();
