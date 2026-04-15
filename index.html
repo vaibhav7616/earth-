@@ -31,34 +31,40 @@
 
     <div id="ui-container">
         <div class="header">
-            <span class="badge">Live 3D Rendering</span>
-            <h1>Celestial 3D</h1>
-            <p>Interactive Premium Solar System Explorer</p>
+            <span class="badge">NASA Visual Standard</span>
+            <h1>Solaris Elite</h1>
+            <p>High-Fidelity Planetary Explorer</p>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="place-search" placeholder="Search Earth (e.g. New York, Paris)...">
+            <button id="search-btn">🔍</button>
+            <div id="search-results"></div>
         </div>
         
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="label">Orbiting</span>
-                <span class="value" id="orbiting-body">Sun</span>
+                <span class="label">Target</span>
+                <span class="value" id="orbiting-body">Interstellar Space</span>
             </div>
             <div class="stat-card">
-                <span class="label">Zoom Level</span>
-                <span class="value" id="zoom-value">Outer Space</span>
+                <span class="label">Zoom</span>
+                <span class="value" id="zoom-value">Analyzing...</span>
             </div>
         </div>
 
         <div class="controls-hint">
             <div class="hint-item">
-                <span class="icon">🔍</span>
+                <span class="icon">🌍</span>
                 <div class="text">
-                    <strong>Zoom to Earth</strong>
-                    <span>Scroll deep to see Street View</span>
+                    <strong>Click Earth</strong>
+                    <span>To activate Google Map mode</span>
                 </div>
             </div>
         </div>
         
         <div class="footer-note">
-            Cinematic rendering enabled with Bloom & HDR
+            Real-time SDO Solar Simulation & ESRI Satellite Engine
         </div>
     </div>
     
