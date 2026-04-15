@@ -3,38 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Solar System Explorer</title>
+    <title>3D Celestial Explorer | Premium Solar System</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Import Map for Three.js so browser can resolve 'three' and 'three/addons/' -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Initializing Universe...</p>
+    </div>
+
     <div id="ui-container">
-        <h1>Solar System Explorer</h1>
-        <p>Interactive 3D Universe</p>
-        <div class="controls-hint" style="margin-bottom: 1rem;">
-            <div class="hint-item">☀️ Realistic Sun & Glow</div>
-            <div class="hint-item">🪐 All Planets included</div>
-            <div class="hint-item">🖱️ Click & Drag to view all</div>
+        <div class="header">
+            <span class="badge">Live 3D Rendering</span>
+            <h1>Celestial 3D</h1>
+            <p>Interactive Premium Solar System Explorer</p>
         </div>
         
-        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">
-           <i>Note: Switching to a full Solar System means we trade street/house level zooming on Earth for a complete 3D orbital space simulation.</i>
-        </p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="label">Status</span>
+                <span class="value">Operational</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Engine</span>
+                <span class="value">Three.js v128</span>
+            </div>
+        </div>
+
+        <div class="controls-hint">
+            <div class="hint-item">
+                <span class="icon">🖱️</span>
+                <div class="text">
+                    <strong>Orbit</strong>
+                    <span>Left Click + Drag</span>
+                </div>
+            </div>
+            <div class="hint-item">
+                <span class="icon">🔍</span>
+                <div class="text">
+                    <strong>Zoom</strong>
+                    <span>Scroll Wheel</span>
+                </div>
+            </div>
+            <div class="hint-item">
+                <span class="icon">🖐️</span>
+                <div class="text">
+                    <strong>Pan</strong>
+                    <span>Right Click + Drag</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            Cinematic rendering enabled with Bloom & HDR
+        </div>
     </div>
     
     <div id="canvas-container"></div>
     
-    <!-- ES Module script -->
-    <script type="module" src="main.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
