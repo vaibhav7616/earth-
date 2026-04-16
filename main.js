@@ -200,6 +200,7 @@ planetsData.forEach(d => {
 // --- GOOGLE MAPS & SEARCH ENGINE ---
 let map;
 let mapVisible = false;
+let isFollowingEarth = false;
 
 function initMap() {
     if (map) return;
@@ -236,6 +237,7 @@ function activateMapMode(lat = 20, lon = 0) {
     document.getElementById('map-overlay').style.opacity = '1';
     document.getElementById('map-overlay').style.pointerEvents = 'auto';
     mapVisible = true;
+    isFollowingEarth = true;
     document.getElementById('zoom-value').innerText = "Surface Protocol Active";
 }
 
@@ -268,19 +270,28 @@ function animate() {
         p.obj.rotation.y += 0.005;
     });
 
-    // Toggle map visibility based on scroll distance manually as fallback
+    const earthPos = new THREE.Vector3();
+    earthBody.getWorldPosition(earthPos);
+
+    if (isFollowingEarth) {
+        controls.target.lerp(earthPos, 0.1);
+        const dist = camera.position.distanceTo(earthPos);
+        if (dist > 35) {
+            const dir = new THREE.Vector3().subVectors(camera.position, earthPos).normalize();
+            camera.position.lerp(earthPos.clone().add(dir.multiplyScalar(30)), 0.05);
+        }
+    }
+
     if (!mapVisible) {
-        const earthPos = new THREE.Vector3();
-        earthBody.getWorldPosition(earthPos);
         const dist = camera.position.distanceTo(earthPos);
         if (dist < 40) activateMapMode();
     } else {
-        const earthPos = new THREE.Vector3();
-        earthBody.getWorldPosition(earthPos);
         if (camera.position.distanceTo(earthPos) > 100) {
             document.getElementById('map-overlay').style.opacity = '0';
             document.getElementById('map-overlay').style.pointerEvents = 'none';
             mapVisible = false;
+            isFollowingEarth = false;
+            controls.target.set(0, 0, 0);
         }
     }
 
