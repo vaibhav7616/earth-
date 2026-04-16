@@ -280,17 +280,21 @@ function animate() {
             const dir = new THREE.Vector3().subVectors(camera.position, earthPos).normalize();
             camera.position.lerp(earthPos.clone().add(dir.multiplyScalar(30)), 0.05);
         }
+        // Stop forcing follow once we've arrived close enough
+        if (dist < 45) {
+            isFollowingEarth = false;
+        }
     }
 
     if (!mapVisible) {
         const dist = camera.position.distanceTo(earthPos);
         if (dist < 40) activateMapMode();
     } else {
-        if (camera.position.distanceTo(earthPos) > 100) {
+        const dist = camera.position.distanceTo(earthPos);
+        if (dist > 100 && !isFollowingEarth) {
             document.getElementById('map-overlay').style.opacity = '0';
             document.getElementById('map-overlay').style.pointerEvents = 'none';
             mapVisible = false;
-            isFollowingEarth = false;
             controls.target.set(0, 0, 0);
         }
     }
